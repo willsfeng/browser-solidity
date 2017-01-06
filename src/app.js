@@ -426,6 +426,18 @@ var run = function () {
       })
   }
 
+  function handleSwarmImport (url, cb) {
+    swarmgw.get(url, function (err, content) {
+      // retry if this failed and we're connected via RPC
+      if (err && !executionContext.isVM()) {
+        var web3 = executionContext.web3()
+        web3.swarm.download(url, cb)
+      } else {
+        cb(err, content)
+      }
+    })
+  }
+
   // FIXME: at some point we should invalidate the cache
   var cachedRemoteFiles = {}
 
@@ -447,7 +459,7 @@ var run = function () {
       })
     } else if ((match = /^(bzzr?:\/\/?.*)$/.exec(url))) {
       $('#output').append($('<div/>').append($('<pre/>').text('Loading ' + url + ' ...')))
-      swarmgw.get(match[1], function (err, content) {
+      handleSwarmImport(match[1], function (err, content) {
         if (err) {
           cb('Unable to import "' + url + '": ' + err)
           return
