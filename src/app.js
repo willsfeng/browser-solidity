@@ -515,6 +515,10 @@ var run = function () {
     startdebugging(txResult.transactionHash)
   })
 
+  udapp.event.register('publishContract', this, function (contract) {
+    console.log('Publish contract...', contract)
+  })
+
   var renderer = new Renderer(editor, updateFiles, udapp, executionContext, formalVerification.event, compiler.event) // eslint-disable-line
 
   var staticanalysis = new StaticAnalysis(compiler.event, renderer, editor, offsetToLineColumnConverter)
