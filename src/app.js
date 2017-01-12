@@ -468,17 +468,42 @@ var run = function () {
       })
   }
 
+  function handleIPFS (url, cb) {
+    // replace ipfs:// with /ipfs/
+    url = url.replace(/^ipfs:\/\/?/, '/ipfs/')
+
+    $('#output').append($('<div/>').append($('<pre/>').text('Loading ' + url + ' ...')))
+    return $.get('https://gateway.ipfs.io/' + url)
+      .done(function (data) {
+        cb(null, data)
+      })
+      .fail(function (xhr, text, err) {
+        // NOTE: on some browsers, err equals to '' for certain errors (such as offline browser)
+        cb(err || 'Unknown transport error')
+      })
+  }
+
   // FIXME: at some point we should invalidate the cache
   var cachedRemoteFiles = {}
 
   function handleImportCall (url, cb) {
-    var githubMatch
+    var match
     if (editor.hasFile(url)) {
       cb(null, editor.getFile(url))
     } else if (url in cachedRemoteFiles) {
       cb(null, cachedRemoteFiles[url])
-    } else if ((githubMatch = /^(https?:\/\/)?(www.)?github.com\/([^/]*\/[^/]*)\/(.*)/.exec(url))) {
-      handleGithubCall(githubMatch[3], githubMatch[4], function (err, content) {
+    } else if ((match = /^(https?:\/\/)?(www.)?github.com\/([^/]*\/[^/]*)\/(.*)/.exec(url))) {
+      handleGithubCall(match[3], match[4], function (err, content) {
+        if (err) {
+          cb('Unable to import "' + url + '": ' + err)
+          return
+        }
+
+        cachedRemoteFiles[url] = content
+        cb(null, content)
+      })
+    } else if ((match = /^(\/?ipfs:?\/\/?.+)/.exec(url))) {
+      handleIPFS(match[1], function (err, content) {
         if (err) {
           cb('Unable to import "' + url + '": ' + err)
           return
