@@ -86,7 +86,8 @@ Renderer.prototype.contracts = function (data, source) {
     udappContracts.push({
       name: contractName,
       interface: contract['interface'],
-      bytecode: contract.bytecode
+      bytecode: contract.bytecode,
+      metadata: contract.metadata
     })
   }
 
